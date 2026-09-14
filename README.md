@@ -11,6 +11,19 @@ Built on the [natID/natGUI](https://github.com/idzafic/natID) C++ framework. Uni
 
 ---
 
+## Build it in 30 seconds
+
+The sources live in **`Implementation/`**, not at the repository root. Point your IDE or CMake at that folder:
+
+```bash
+cmake -S Implementation -B build
+cmake --build build --config Release
+```
+
+Full instructions, including the Xcode and Visual Studio paths, are under [Building from source](#building-from-source).
+
+---
+
 ## Download
 
 Prebuilt installers for all three platforms are on the [latest release](https://github.com/arminn2206/TSP-ACO-Solver/releases/latest).
@@ -30,7 +43,7 @@ The macOS builds are ad-hoc signed rather than notarised, so Gatekeeper blocks a
 
 The Travelling Salesman Problem asks for the shortest closed tour visiting every city exactly once — an NP-hard combinatorial optimization problem. Ant Colony Optimization attacks it with a population of artificial ants that build tours probabilistically, biased by a pheromone trail that gets reinforced in proportion to tour quality. Good edges accumulate pheromone, the colony concentrates on them, and the tours get shorter.
 
-Each run draws 15–25 cities at random from a set of 100 real Bosnian cities with true latitude/longitude coordinates, so the distance matrix reflects actual geography rather than random points in a square.
+Each run draws 15–25 cities at random from a set of 99 real Bosnian cities with true latitude/longitude coordinates, so the distance matrix reflects actual geography rather than random points in a square.
 
 ### Features
 
@@ -40,7 +53,7 @@ Each run draws 15–25 cities at random from a set of 100 real Bosnian cities wi
 - **Run comparison** — the two most recently completed runs side by side with their differences, so parameter changes can actually be evaluated
 - **CSV export** — two files per run: a convergence table for offline analysis, and a full problem instance (coordinates, tour, distance matrix) for verification or replay
 - **Reproducible runs** — a fixed seed replays a run exactly; seed and city-draw index are both written into every export. All ACO parameters, the seed, and the animation speed persist across restarts (clamped the same way whether they arrive from the UI or from a previous session)
-- **Bilingual UI** — English and Bosnian, switchable at runtime (93 translated strings; the in-app help below is English-only)
+- **Bilingual UI** — English and Bosnian, switchable at runtime (95 translated strings; the in-app help below is English-only)
 - **Light and dark themes** — colours adapt to the OS setting on startup
 - **In-app help** — App menu → Help opens a static explanation of the algorithm, every part of the map/chart/sidebar, and every control, for anyone opening the app without this README
 
@@ -91,7 +104,7 @@ The improvement percentage is displayed **signed and unclamped**. A run stopped 
 
 ```
 Implementation/     Application sources, resources and build files
-├── CMakeLists.txt
+├── CMakeLists.txt  <- point CMake / your IDE HERE, not at the repository root
 ├── tspaco.cmake
 ├── src/            C++ sources (header-only design, one class per header)
 ├── res/            Resources: artwork manifest, translations, map data, app icons
@@ -99,8 +112,6 @@ Implementation/     Application sources, resources and build files
 Documents/          Proposal, description and presentation
 .github/workflows/  CI that builds the installers
 ```
-
-CMake must be pointed at the `Implementation` folder, not the repository root — see [Building from source](#building-from-source).
 
 ---
 
@@ -150,22 +161,58 @@ The pheromone matrix is worker-owned and unlocked during the update itself, whic
 ### Prerequisites
 
 - [natID SDK](https://github.com/idzafic/natID) cloned to `~/natID.SDK` (and `~/natID.Utils`), with the prebuilt binaries for your platform extracted into `natID.SDK/bin` per that folder's `ReadMe.txt`
-- CMake 3.18+
-- A C++20 compiler — MSVC 2022+, AppleClang, or GCC 13+
+- CMake 3.18 or newer (tested through CMake 4.4)
+- A C++20 compiler — MSVC 2022+, AppleClang (Xcode 14+), or GCC 13+
 - Linux only: `libgtk-4-dev libadwaita-1-dev libopenal-dev`
 
-### Build
+> **The source folder is `Implementation/`, not the repository root.** Every path below reflects that. If an IDE reports that it cannot find a `CMakeLists.txt`, it was pointed at the repository root.
+
+### macOS — Xcode
 
 ```bash
 git clone https://github.com/arminn2206/TSP-ACO-Solver.git
 cd TSP-ACO-Solver
+cmake -S Implementation -B ~/build-tspaco -G Xcode
+open ~/build-tspaco/tspaco.xcodeproj
+```
+
+The same thing through the CMake GUI, following the natID book's macOS setup:
+
+1. *Where is the source code* → the **`Implementation`** folder inside the clone
+2. *Where to build the binaries* → any separate folder, e.g. `/Users/<you>/build-tspaco`
+3. **Configure** → choose the **Xcode** generator → **Generate** → **Open Project**
+4. In Xcode: Product → Scheme → Edit Scheme → Run → **Build Configuration: Release**
+5. ⌘B to build, ⌘R to run
+
+Xcode is a multi-configuration generator, so `-DCMAKE_BUILD_TYPE` has no effect on it — Debug vs Release is chosen inside Xcode, in the scheme.
+
+### macOS / Linux — command line
+
+```bash
+cmake -S Implementation -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+```
+
+### Windows — Visual Studio
+
+```
 cmake -S Implementation -B build
 cmake --build build --config Release
 ```
 
-The binary lands in `~/natID.RAMDisk/Out/tspaco/Release/`.
+If you prefer the IDE, use **File → Open → Folder** and select the **`Implementation`** folder. Visual Studio looks for `CMakeLists.txt` in exactly the folder you open and will do nothing if given the repository root. Add an `x64-Release` configuration through *Manage Configurations*; the repository intentionally ships no `CMakeSettings.json`, because the IDE's own CMake integration has been observed to produce a Debug binary while the configuration dropdown reads Release. When in doubt, build Release from the command line as shown above and check the build log rather than the dropdown.
 
-> **Note for Visual Studio users:** build Release from the command line as shown above. The IDE's own CMake integration has been observed to produce a Debug binary while the configuration dropdown reads Release.
+### Where the binary lands
+
+The SDK redirects build output away from the source tree:
+
+```
+~/natID.RAMDisk/Out/tspaco/Release/tspaco.app     (macOS)
+~/natID.RAMDisk/Out/tspaco/Release/tspaco.exe     (Windows)
+~/natID.RAMDisk/Out/tspaco/Release/tspaco         (Linux)
+```
+
+An empty build folder next to the sources does not mean the build failed.
 
 ### Packaging
 

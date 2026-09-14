@@ -14,6 +14,8 @@
 #include <vector>
 #include <algorithm>
 #include <atomic>
+#include <thread>
+#include <mutex>
 #include <string>
 #include <cassert>
 

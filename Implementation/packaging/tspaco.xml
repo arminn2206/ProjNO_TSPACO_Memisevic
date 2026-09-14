@@ -61,7 +61,6 @@
 			win:useMakeCabinet="true"
 			win:minBuildNumber="17763"
 			lin:depends="$DepGTKv4"
-			lin:icon="~ACO_TSP_PROJECT/res/appIcon/lnx"/>
 
 	<!--
 		lin:icon points at a FOLDER of PNGs, not a file. maps.xml uses
