@@ -87,10 +87,27 @@ The improvement percentage is displayed **signed and unclamped**. A run stopped 
 
 ---
 
+## Repository layout
+
+```
+Implementation/     Application sources, resources and build files
+├── CMakeLists.txt
+├── tspaco.cmake
+├── src/            C++ sources (header-only design, one class per header)
+├── res/            Resources: artwork manifest, translations, map data, app icons
+└── packaging/      SetupCollector configuration
+Documents/          Proposal, description and presentation
+.github/workflows/  CI that builds the installers
+```
+
+CMake must be pointed at the `Implementation` folder, not the repository root — see [Building from source](#building-from-source).
+
+---
+
 ## Architecture
 
 ```
-src/
+Implementation/src/
 ├── main.cpp             Entry point
 ├── Application.h        natGUI application, creates the main window
 ├── MainWindow.h         Menu/toolbar dispatch, Start/Stop/Reset/Export/Compare
@@ -142,7 +159,7 @@ The pheromone matrix is worker-owned and unlocked during the update itself, whic
 ```bash
 git clone https://github.com/arminn2206/TSP-ACO-Solver.git
 cd TSP-ACO-Solver
-cmake -S . -B build
+cmake -S Implementation -B build
 cmake --build build --config Release
 ```
 
@@ -152,13 +169,13 @@ The binary lands in `~/natID.RAMDisk/Out/tspaco/Release/`.
 
 ### Packaging
 
-Installers are produced by the SDK's `SetupCollector` tool against [`packaging/tspaco.xml`](packaging/tspaco.xml):
+Installers are produced by the SDK's `SetupCollector` tool against [`Implementation/packaging/tspaco.xml`](Implementation/packaging/tspaco.xml):
 
 ```bash
 SetupCollector <path-to-setups>/tspaco.xml
 ```
 
-`packaging/GTK4.xml` overrides the SDK's own GTK package definition — the stock file points at `$MyBin/GTK/release/bin`, but the Windows SDK ships its GTK runtime DLLs flat in `$MyBin/GTK`.
+`Implementation/packaging/GTK4.xml` overrides the SDK's own GTK package definition — the stock file points at `$MyBin/GTK/release/bin`, but the Windows SDK ships its GTK runtime DLLs flat in `$MyBin/GTK`.
 
 ---
 
