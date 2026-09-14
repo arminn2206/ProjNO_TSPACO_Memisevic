@@ -27,7 +27,7 @@
 		             underscores in package names and this name is used as-is.
 		out        - where the installer is written.
 	-->
-	<Folders dev="~ACO_TSP_PROJECT"
+	<Folders dev="~ACO_TSP_PROJECT/Implementation"
 			 executable="$RAMDisk/Out/tspaco/Release"
 			 out="$RAMDisk/Setup/tspaco"/>
 

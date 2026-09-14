@@ -1,5 +1,13 @@
 name: Build All Installers
 
+# Repo layout (course submission format): the application sources live in
+# Implementation/ (CMakeLists.txt, src, res, packaging), documents live in
+# Documents/. This file must stay at <repo root>/.github/workflows/ - GitHub
+# only reads workflows from the repository root, never from a subfolder.
+# Every source path below is therefore prefixed with Implementation/.
+# The symlink/junction to $HOME/ACO_TSP_PROJECT still points at the repo
+# ROOT, because packaging/tspaco.xml resolves dev="~ACO_TSP_PROJECT/Implementation".
+
 # Two ways to run this:
 #   1. Push a tag like v1.0.0            -> builds AND publishes a GitHub Release
 #   2. Actions tab -> "Run workflow"     -> builds only, unless you set
@@ -36,7 +44,9 @@ env:
   # Lowercase, no underscore: dpkg-deb rejects underscores in package names
   # and this string is used as-is for the Linux .deb package name.
   INTERNAL_NAME: tspaco
-  # Where packaging/TSP_ACO.xml expects the sources (its "dev" attribute)
+  # Where Implementation/packaging/tspaco.xml expects the sources. Its "dev"
+  # attribute is "~ACO_TSP_PROJECT/Implementation", so this link points at the
+  # repo ROOT and the /Implementation part comes from the config itself.
   PROJECT_DIR: ACO_TSP_PROJECT
   # natID SDK prebuilt binaries. VERIFY THESE against
   # https://github.com/idzafic/natID/releases before the first run - the SDK's
@@ -83,7 +93,7 @@ jobs:
           REM EnvVariables.xml maps $RAMDisk to R: on Windows - fake it with subst
           if not exist %USERPROFILE%\natID.RAMDisk mkdir %USERPROFILE%\natID.RAMDisk
           subst R: %USERPROFILE%\natID.RAMDisk
-          cmake -S . -B %USERPROFILE%\natID.RAMDisk\build
+          cmake -S Implementation -B %USERPROFILE%\natID.RAMDisk\build
           cmake --build %USERPROFILE%\natID.RAMDisk\build --config Release
           dir R:\Out\${{ env.INTERNAL_NAME }}\Release
 
@@ -96,12 +106,12 @@ jobs:
         run: |
           $env:HOME = $env:USERPROFILE
           Copy-Item "$env:USERPROFILE\natID.SDK\DevEnv\SetupCollectors" "$env:USERPROFILE\Setups" -Recurse -Force
-          Copy-Item "packaging/${{ env.INTERNAL_NAME }}.xml" "$env:USERPROFILE\Setups\"
+          Copy-Item "Implementation/packaging/${{ env.INTERNAL_NAME }}.xml" "$env:USERPROFILE\Setups\"
           # SetupCollector loads Packages/*.xml from the SDK's OWN SetupCollectors
           # folder, not from the config's folder. So if GTK paths need patching,
           # the patched copy has to overwrite the SDK's.
-          if (Test-Path "packaging/GTK4.xml") {
-            Copy-Item "packaging/GTK4.xml" "$env:USERPROFILE\natID.SDK\DevEnv\SetupCollectors\Packages\GTK4.xml" -Force
+          if (Test-Path "Implementation/packaging/GTK4.xml") {
+            Copy-Item "Implementation/packaging/GTK4.xml" "$env:USERPROFILE\natID.SDK\DevEnv\SetupCollectors\Packages\GTK4.xml" -Force
           }
           & "$env:USERPROFILE\natID.Utils\windows\SetupCollector.exe" "$env:USERPROFILE\Setups\${{ env.INTERNAL_NAME }}.xml"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -120,15 +130,6 @@ jobs:
             Write-Error "No .msi produced - SetupCollector failed (check the log above)"
             exit 1
           }
-      - name: Add installation guide
-        shell: pwsh
-        run: |
-          @"
-          Windows Installation Guide
-          ===========================
-          Use the .MSI file (ACO TSP Solver.msi) - it's the recommended installer.
-          If Windows blocks the .EXE, that's a false SmartScreen alert (unsigned app). The .MSI works without warnings.
-          "@ | Out-File installer-output/README.txt -Encoding UTF8
 
       - name: Zip installer pair
         shell: pwsh
@@ -162,7 +163,7 @@ jobs:
 
       - name: Build (Release)
         run: |
-          cmake -S . -B $HOME/natID.RAMDisk/build -DCMAKE_BUILD_TYPE=Release
+          cmake -S Implementation -B $HOME/natID.RAMDisk/build -DCMAKE_BUILD_TYPE=Release
           cmake --build $HOME/natID.RAMDisk/build -j$(sysctl -n hw.ncpu)
           test -f $HOME/natID.RAMDisk/Out/${{ env.INTERNAL_NAME }}/Release/${{ env.INTERNAL_NAME }}.app/Contents/MacOS/${{ env.INTERNAL_NAME }}
 
@@ -171,7 +172,7 @@ jobs:
           # EnvVariables.xml maps $RAMDisk to /Volumes/RAMDisk on macOS
           sudo ln -s $HOME/natID.RAMDisk /Volumes/RAMDisk
           cp -r $HOME/natID.SDK/DevEnv/SetupCollectors $HOME/Setups
-          cp "$GITHUB_WORKSPACE/packaging/${{ env.INTERNAL_NAME }}.xml" $HOME/Setups/
+          cp "$GITHUB_WORKSPACE/Implementation/packaging/${{ env.INTERNAL_NAME }}.xml" $HOME/Setups/
           chmod +x $HOME/natID.Utils/macOS/arm64/SetupCollector
           $HOME/natID.Utils/macOS/arm64/SetupCollector $HOME/Setups/${{ env.INTERNAL_NAME }}.xml
           find $HOME/natID.RAMDisk/Setup -maxdepth 4
@@ -179,40 +180,17 @@ jobs:
       - name: Stage and zip the .app
         run: |
           mkdir -p "$GITHUB_WORKSPACE/installer-output"
-          cat > "$GITHUB_WORKSPACE/installer-output/README.txt" <<'EOF'
-          macOS Installation Guide
-          ========================
-          1. Unzip this folder
-          2. Drag "ACO TSP Solver.app" to Applications
-
-          FIRST LAUNCH:
-          The app is not notarized, so macOS will block a normal double-click.
-          Instead:
-            - Right-click on the app -> Open
-            - Click "Open" in the dialog
-
-          After the first launch, it opens normally.
-
-          More info: https://github.com/arminn2206/TSP-ACO-Solver
-          EOF
           # -print0 / read -d '' - "ACO TSP Solver.app" has spaces, which break
           # a plain `find | head -1` + `xargs basename` pipeline (xargs splits on
           # whitespace by default).
           APP_PATH=""
           while IFS= read -r -d '' f; do APP_PATH="$f"; break; done < <(find $HOME/natID.RAMDisk/Setup -maxdepth 5 -type d -name "*.app" -print0)
           if [ -z "$APP_PATH" ]; then echo "ERROR: no .app bundle in Setup tree"; exit 1; fi
-          # ditto's zip mode (-c -k) only accepts ONE source, so the .app and
-          # README.txt are staged together in one folder first and that folder
-          # is zipped as a single source - not passed as two sources on one line.
-          ZIPSTAGE="$GITHUB_WORKSPACE/${{ env.APP_NAME }}-macOS-Silicon"
-          rm -rf "$ZIPSTAGE" && mkdir -p "$ZIPSTAGE"
-          cp -R "$APP_PATH" "$ZIPSTAGE/"
-          mv "$GITHUB_WORKSPACE/installer-output/README.txt" "$ZIPSTAGE/README.txt"
-          cd "$GITHUB_WORKSPACE"
-          # ditto, not zip - it preserves the executable bit and resource forks.
-          # ZIPSTAGE is the single source ditto's -c mode requires; unzipping the
-          # result gives one folder containing the .app and README.txt together.
-          ditto -c -k --keepParent --sequesterRsrc "$(basename "$ZIPSTAGE")" "installer-output/${{ env.APP_NAME }}-macOS-Silicon.zip"
+          cp -R "$APP_PATH" "$GITHUB_WORKSPACE/installer-output/"
+          cd "$GITHUB_WORKSPACE/installer-output"
+          APP="$(basename "$APP_PATH")"
+          # ditto, not zip - it preserves the executable bit and resource forks
+          ditto -c -k --keepParent --sequesterRsrc "$APP" ${{ env.APP_NAME }}-macOS-Silicon.zip
 
       - uses: actions/upload-artifact@v4
         with:
@@ -242,7 +220,7 @@ jobs:
 
       - name: Build (Release)
         run: |
-          cmake -S . -B $HOME/natID.RAMDisk/build -DCMAKE_BUILD_TYPE=Release
+          cmake -S Implementation -B $HOME/natID.RAMDisk/build -DCMAKE_BUILD_TYPE=Release
           cmake --build $HOME/natID.RAMDisk/build -j$(sysctl -n hw.ncpu)
           test -f $HOME/natID.RAMDisk/Out/${{ env.INTERNAL_NAME }}/Release/${{ env.INTERNAL_NAME }}.app/Contents/MacOS/${{ env.INTERNAL_NAME }}
 
@@ -250,7 +228,7 @@ jobs:
         run: |
           sudo ln -s $HOME/natID.RAMDisk /Volumes/RAMDisk
           cp -r $HOME/natID.SDK/DevEnv/SetupCollectors $HOME/Setups
-          cp "$GITHUB_WORKSPACE/packaging/${{ env.INTERNAL_NAME }}.xml" $HOME/Setups/
+          cp "$GITHUB_WORKSPACE/Implementation/packaging/${{ env.INTERNAL_NAME }}.xml" $HOME/Setups/
           chmod +x $HOME/natID.Utils/macOS/x64/SetupCollector
           $HOME/natID.Utils/macOS/x64/SetupCollector $HOME/Setups/${{ env.INTERNAL_NAME }}.xml
           find $HOME/natID.RAMDisk/Setup -maxdepth 4
@@ -258,31 +236,13 @@ jobs:
       - name: Stage and zip the .app
         run: |
           mkdir -p "$GITHUB_WORKSPACE/installer-output"
-          cat > "$GITHUB_WORKSPACE/installer-output/README.txt" <<'EOF'
-          macOS Installation Guide
-          ========================
-          1. Unzip this folder
-          2. Drag "ACO TSP Solver.app" to Applications
-
-          FIRST LAUNCH:
-          The app is not notarized, so macOS will block a normal double-click.
-          Instead:
-            - Right-click on the app -> Open
-            - Click "Open" in the dialog
-
-          After the first launch, it opens normally.
-
-          More info: https://github.com/arminn2206/TSP-ACO-Solver
-          EOF
           APP_PATH=""
           while IFS= read -r -d '' f; do APP_PATH="$f"; break; done < <(find $HOME/natID.RAMDisk/Setup -maxdepth 5 -type d -name "*.app" -print0)
           if [ -z "$APP_PATH" ]; then echo "ERROR: no .app bundle in Setup tree"; exit 1; fi
-          ZIPSTAGE="$GITHUB_WORKSPACE/${{ env.APP_NAME }}-macOS-Intel"
-          rm -rf "$ZIPSTAGE" && mkdir -p "$ZIPSTAGE"
-          cp -R "$APP_PATH" "$ZIPSTAGE/"
-          mv "$GITHUB_WORKSPACE/installer-output/README.txt" "$ZIPSTAGE/README.txt"
-          cd "$GITHUB_WORKSPACE"
-          ditto -c -k --keepParent --sequesterRsrc "$(basename "$ZIPSTAGE")" "installer-output/${{ env.APP_NAME }}-macOS-Intel.zip"
+          cp -R "$APP_PATH" "$GITHUB_WORKSPACE/installer-output/"
+          cd "$GITHUB_WORKSPACE/installer-output"
+          APP="$(basename "$APP_PATH")"
+          ditto -c -k --keepParent --sequesterRsrc "$APP" ${{ env.APP_NAME }}-macOS-Intel.zip
 
       - uses: actions/upload-artifact@v4
         with:
@@ -317,7 +277,7 @@ jobs:
 
       - name: Build (Release)
         run: |
-          cmake -S . -B $HOME/natID.RAMDisk/build -DCMAKE_BUILD_TYPE=Release
+          cmake -S Implementation -B $HOME/natID.RAMDisk/build -DCMAKE_BUILD_TYPE=Release
           cmake --build $HOME/natID.RAMDisk/build -j$(nproc)
           test -f $HOME/natID.RAMDisk/Out/${{ env.INTERNAL_NAME }}/Release/${{ env.INTERNAL_NAME }}
 
@@ -328,7 +288,7 @@ jobs:
           sudo rm -rf /media/RAMDisk
           sudo ln -s $HOME/natID.RAMDisk /media/RAMDisk
           cp -r $HOME/natID.SDK/DevEnv/SetupCollectors $HOME/Setups
-          cp "$GITHUB_WORKSPACE/packaging/${{ env.INTERNAL_NAME }}.xml" $HOME/Setups/
+          cp "$GITHUB_WORKSPACE/Implementation/packaging/${{ env.INTERNAL_NAME }}.xml" $HOME/Setups/
           chmod +x $HOME/natID.Utils/linux/SetupCollector
           $HOME/natID.Utils/linux/SetupCollector $HOME/Setups/${{ env.INTERNAL_NAME }}.xml
           find $HOME/natID.RAMDisk/Setup -maxdepth 4
@@ -337,9 +297,9 @@ jobs:
         run: |
           DEB=$(find $HOME/natID.RAMDisk/Setup -name "*.deb" | head -1)
           if [ -z "$DEB" ]; then echo "ERROR: no .deb found"; exit 1; fi
-          ICON_SRC="$GITHUB_WORKSPACE/res/appIcon/lnx"
+          ICON_SRC="$GITHUB_WORKSPACE/Implementation/res/appIcon/lnx"
           if [ ! -d "$ICON_SRC" ]; then
-            echo "No res/appIcon/lnx - skipping icon patch"
+            echo "No Implementation/res/appIcon/lnx - skipping icon patch"
             exit 0
           fi
           rm -rf /tmp/debpatch && mkdir -p /tmp/debpatch
@@ -357,19 +317,6 @@ jobs:
         run: |
           mkdir -p "$GITHUB_WORKSPACE/installer-output"
           find $HOME/natID.RAMDisk/Setup -name "*.deb" -exec cp {} "$GITHUB_WORKSPACE/installer-output/" \;
-          cat > "$GITHUB_WORKSPACE/installer-output/README.txt" <<'EOF'
-          Linux Installation Guide
-          ========================
-          Unzip this folder and install with:
-            sudo apt install ./tspaco.deb
-
-          This installs the app and dependencies (GTK 4, libadwaita, OpenAL).
-
-          Launch from your application menu or terminal:
-            tspaco
-
-          More info: https://github.com/arminn2206/TSP-ACO-Solver
-          EOF
           ls -la "$GITHUB_WORKSPACE/installer-output/"
           cd "$GITHUB_WORKSPACE"
           zip -j ${{ env.APP_NAME }}-linux.zip installer-output/*
@@ -418,16 +365,14 @@ jobs:
 
             | Platform | File |
             |----------|------|
-            | Windows | `TSP_ACO-win.zip` (installer .exe + .msi - keep both together; **use the .MSI**, see README.txt inside) |
+            | Windows | `TSP_ACO-win.zip` (installer .exe + .msi - keep both together) |
             | macOS Apple Silicon | `TSP_ACO-macOS-Silicon.zip` (M1/M2/M3/M4) |
             | macOS Intel | `TSP_ACO-macOS-Intel.zip` |
             | Linux (Ubuntu 24.04+) | `TSP_ACO-linux.zip` (contains .deb) |
 
-            Each zip includes a `README.txt` with install instructions specific to that platform.
-
             ### Install notes
 
-            - **Windows**: unzip, run the .msi (the .exe is included as an alternative wrapper, but unsigned .exe files commonly trigger a false SmartScreen "unrecognized app" warning - the .msi does not)
+            - **Windows**: unzip, run the .exe (or the .msi directly)
             - **macOS**: unzip, drag to Applications, first launch: right-click -> Open
               (the app is unsigned, so Gatekeeper blocks a normal double-click)
             - **Linux**: unzip, then `sudo apt install ./*.deb`
