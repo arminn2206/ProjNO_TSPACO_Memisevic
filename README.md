@@ -4,10 +4,10 @@ A desktop application that solves the Travelling Salesman Problem with Ant Colon
 
 Built on the [natID/natGUI](https://github.com/idzafic/natID) C++ framework. University project for the Non-linear Optimization course at the Faculty of Electrical Engineering (ETF), University of Sarajevo.
 
-[![Release](https://img.shields.io/github/v/release/arminn2206/TSP-ACO-Solver)](https://github.com/arminn2206/TSP-ACO-Solver/releases)
-[![Build](https://github.com/arminn2206/TSP-ACO-Solver/actions/workflows/release-all.yml/badge.svg)](https://github.com/arminn2206/TSP-ACO-Solver/actions)
+[![Release](https://img.shields.io/github/v/release/arminn2206/ProjNO_TSPACO_Memisevic)](https://github.com/arminn2206/ProjNO_TSPACO_Memisevic/releases)
+[![Build](https://github.com/arminn2206/ProjNO_TSPACO_Memisevic/actions/workflows/release-all.yml/badge.svg)](https://github.com/arminn2206/ProjNO_TSPACO_Memisevic/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE.txt)
-[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://github.com/arminn2206/TSP-ACO-Solver/releases/latest)
+[![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://github.com/arminn2206/ProjNO_TSPACO_Memisevic/releases/latest)
 
 ---
 
@@ -26,7 +26,7 @@ Full instructions, including the Xcode and Visual Studio paths, are under [Build
 
 ## Download
 
-Prebuilt installers for all three platforms are on the [latest release](https://github.com/arminn2206/TSP-ACO-Solver/releases/latest).
+Prebuilt installers for all three platforms are on the [latest release](https://github.com/arminn2206/ProjNO_TSPACO_Memisevic/releases/latest).
 
 | Platform | File | Install |
 |---|---|---|
@@ -170,8 +170,8 @@ The pheromone matrix is worker-owned and unlocked during the update itself, whic
 ### macOS — Xcode
 
 ```bash
-git clone https://github.com/arminn2206/TSP-ACO-Solver.git
-cd TSP-ACO-Solver
+git clone https://github.com/arminn2206/ProjNO_TSPACO_Memisevic.git
+cd ProjNO_TSPACO_Memisevic
 cmake -S Implementation -B ~/build-tspaco -G Xcode
 open ~/build-tspaco/tspaco.xcodeproj
 ```
