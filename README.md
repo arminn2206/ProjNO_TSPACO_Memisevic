@@ -2,7 +2,7 @@
 
 A desktop application that solves the Travelling Salesman Problem with Ant Colony Optimization, visualising the search live: the best tour on a map of Bosnia and Herzegovina, the pheromone trail as edge thickness, and the convergence curve as it develops.
 
-Built on the [natID/natGUI](https://github.com/idzafic/natID) C++ framework. University project for the Non-linear Optimization course at the Faculty of Electrical Engineering (ETF), University of Sarajevo.
+Built on the [natID/natGUI](https://github.com/idzafic/natID) C++ framework. University project for the Numerical Optimization course at the Faculty of Electrical Engineering (ETF), University of Sarajevo.
 
 [![Release](https://img.shields.io/github/v/release/arminn2206/ProjNO_TSPACO_Memisevic)](https://github.com/arminn2206/ProjNO_TSPACO_Memisevic/releases)
 [![Build](https://github.com/arminn2206/ProjNO_TSPACO_Memisevic/actions/workflows/release-all.yml/badge.svg)](https://github.com/arminn2206/ProjNO_TSPACO_Memisevic/actions)
@@ -238,7 +238,7 @@ The workflow can also be run manually from the Actions tab with `publish_release
 
 ## Project context
 
-Implemented for the Non-linear Optimization course at ETF Sarajevo, extending the professor's `B_S03_Maps` natID example. The map rendering, canvas animation loop, and background-thread architecture come from that example; cities replace towns, TSP tour edges replace roads, and the threaded loop drives the ACO iteration engine.
+Implemented for the Numerical Optimization course at ETF Sarajevo, extending the professor's `B_S03_Maps` natID example. The map rendering, canvas animation loop, and background-thread architecture come from that example; cities replace towns, TSP tour edges replace roads, and the threaded loop drives the ACO iteration engine.
 
 The original `Graph` class from the example was dropped: ACO needs a complete graph as an $N \times N$ matrix for pheromone and distance lookups, not the adjacency-list structure a shortest-path search wants.
 
