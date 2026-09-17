@@ -27,9 +27,12 @@
 \setlist{itemsep=2pt,topsep=3pt}
 \renewcommand{\arraystretch}{1.18}
 
-\usepackage{xurl}
+\usepackage{url}
+\makeatletter
+\g@addto@macro{\UrlBreaks}{\do\:\do\_\do\.\do\/}
+\makeatother
 \DeclareUrlCommand\code{\urlstyle{tt}}
-\emergencystretch=2em
+\emergencystretch=4em
 \newcolumntype{L}{>{\raggedright\arraybackslash}X}
 
 % Screenshot placeholder: replace the \fbox{...} with \includegraphics[width=\linewidth]{file.png}
@@ -133,7 +136,7 @@ Stützle's \emph{Ant Colony Optimization} (MIT Press, 2004) as the theoretical s
 natID example \code{B_S03_Maps} as the starting point. The delivered implementation follows both. The
 table below lists every item of the proposal against what was delivered.
 
-\begin{longtable}{@{}p{3.6cm}p{5.2cm}p{6.2cm}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{5.2cm}>{\raggedright\arraybackslash}p{6.2cm}@{}}
 \toprule
 \textbf{Item} & \textbf{Proposal} & \textbf{Delivered (+ additions)} \\
 \midrule
@@ -158,11 +161,12 @@ Distribution & -- & GitHub Actions workflow building Windows, macOS (Apple Silic
 \bottomrule
 \end{longtable}
 
-The only substantive deviation from the literal wording of the proposal is the instance itself:
+The only substantive deviation in the problem being solved is the instance itself:
 instead of synthetic random points, the cities are a random subset of real towns, so the distance
 matrix reflects actual geography. Tour lengths are therefore reported in kilometres.
+The proposal also listed the example's \code{Graph} structure among the parts to be adapted; Section~\ref{sec:b03} explains why it was removed instead.
 
-\subsection{Starting Point: \texttt{B\_S03\_Maps}}
+\subsection{Starting Point: \texttt{B\_S03\_Maps}}\label{sec:b03}
 From the professor's example the project keeps the application skeleton (\code{Application},
 \code{MainWindow}, \code{MenuBar}, \code{ToolBar}), the \code{Town}/\code{Primitive} drawing classes, the
 XML map loading in \code{ViewMap}, the canvas animation loop, and the background thread with its
@@ -306,8 +310,8 @@ entries, and no whole-matrix operation expresses ``add $Q/L_k$ along this permut
 
 \subsection{Complete Algorithm}
 
-\begin{algorithm}[htbp]
-\caption{Ant System as implemented in \texttt{Model::runACO()}}
+\begin{algorithm}[tbp]
+\caption{Ant System as implemented in \texttt{Model::runACO()}}\label{alg:as}
 \begin{algorithmic}[1]
 \State build $D$; set $\tau_{ij}\gets\tau_0$ for $i\ne j$, $\tau_{ii}\gets0$; $L^\ast\gets\infty$
 \State $\text{rng}\gets\text{makeRNG}(\text{seed},\ \text{stream }1)$
@@ -328,6 +332,8 @@ entries, and no whole-matrix operation expresses ``add $Q/L_k$ along this permut
 \State completed $\gets$ \textbf{not} Stop requested
 \end{algorithmic}
 \end{algorithm}
+
+Algorithm~\ref{alg:as} combines the steps of Sections~2.3--2.7 into one complete run of \code{Model::runACO()}.
 
 The stored best tour is rotated (\code{std::rotate}) so that it begins at the city that carried the
 start marker when the run was started (the anchor is read once, at the start of \code{runACO()}). This is presentation only: a tour is a cycle, so rotation changes neither the tour nor its
@@ -600,7 +606,7 @@ Apart from \code{main.cpp}, all code is in headers under \code{Implementation/sr
         writer.) The chart's two curves are copied in one lock block, so they always have equal length.
         The sidebar reads the best length under the lock but the iteration counters as separate atomics,
         so for a single frame the counters can lag the best cost by one update.
-  \item Counters and flags crossing threads outside the lock (\code{_iteration},
+  \item \sloppy Counters and flags crossing threads outside the lock (\code{_iteration},
         \code{_bestFoundAtIteration}, \code{_searching}, \code{_stopRequested}, \code{_tourFound},
         \code{_ranToCompletion}, and the live \code{sleepMS} delay) are \code{std::atomic}.
   \item \code{gui::Shape} objects are created only on the main thread. The worker sets
@@ -952,7 +958,7 @@ baseline turn ``it seems to work'' into a measurable claim.
 \begin{enumerate}[label={[\arabic*]}]
   \item M. Dorigo, T. Stützle, \emph{Ant Colony Optimization}, MIT Press, Cambridge, MA, 2004.
   \item A. Memišević, \emph{Ant Colony Optimization for the Traveling Salesman Problem} -- project proposal,
-        ETF Sarajevo (\code{Documents/NO_project_proposal_ArminMemisevic.pdf}).
+        ETF Sarajevo (\code{Docs/NO_project_proposal_ArminMemisevic.pdf}).
   \item I. Džafić, \emph{natID} framework and the \code{B_S03_Maps} example,
         \url{https://github.com/idzafic/natID}.
   \item Project repository: \url{https://github.com/arminn2206/ProjNO_TSPACO_Memisevic}.

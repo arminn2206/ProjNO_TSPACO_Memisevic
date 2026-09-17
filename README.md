@@ -6,7 +6,7 @@ Built on the [natID/natGUI](https://github.com/idzafic/natID) C++ framework. Uni
 
 [![Release](https://img.shields.io/github/v/release/arminn2206/ProjNO_TSPACO_Memisevic)](https://github.com/arminn2206/ProjNO_TSPACO_Memisevic/releases)
 [![Build](https://github.com/arminn2206/ProjNO_TSPACO_Memisevic/actions/workflows/release-all.yml/badge.svg)](https://github.com/arminn2206/ProjNO_TSPACO_Memisevic/actions)
-[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE.txt)
+[![License](https://img.shields.io/badge/license-MIT-blue)](https://github.com/arminn2206/ProjNO_TSPACO_Memisevic/blob/main/LICENSE.txt)
 [![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://github.com/arminn2206/ProjNO_TSPACO_Memisevic/releases/latest)
 
 ---
@@ -79,7 +79,7 @@ Order matters: evaporation applies to the trail as it stood at the *start* of th
 
 ### Parameters
 
-All parameters are configurable in the UI and are snapshotted once when Start is pressed, so they stay constant for the duration of a run.
+All parameters are snapshotted once when Start is pressed, so they stay constant for the duration of a run. Ants, iterations, α, β, ρ and the seed are editable in the UI; Q and τ₀ are fixed compile-time constants.
 
 | Parameter | Symbol | Default | Effect |
 |---|---|---|---|
@@ -88,8 +88,8 @@ All parameters are configurable in the UI and are snapshotted once when Start is
 | Pheromone influence | α | 1.0 | Weight on the trail |
 | Heuristic influence | β | 3.0 | Weight on 1/distance |
 | Evaporation rate | ρ | 0.5 | Fraction of trail lost per iteration |
-| Deposit constant | Q | 100.0 | Scales the per-ant deposit |
-| Initial pheromone | τ₀ | 1.0 | Uniform starting trail |
+| Deposit constant | Q | 100.0 | Scales the per-ant deposit (fixed, not editable) |
+| Initial pheromone | τ₀ | 1.0 | Uniform starting trail (fixed, not editable) |
 | Random seed | — | random | Fixed value makes the run reproducible |
 
 ### Quality baseline
@@ -108,9 +108,9 @@ Implementation/     Application sources, resources and build files
 ├── tspaco.cmake
 ├── src/            C++ sources (header-only design, one class per header)
 ├── res/            Resources: artwork manifest, translations, map data, app icons
-└── packaging/      SetupCollector configuration
-Documents/          Proposal, description and presentation
-.github/workflows/  CI that builds the installers
+├── packaging/      SetupCollector configuration
+└── .gitignore
+Docs/               Proposal, description and presentations
 ```
 
 ---
@@ -228,7 +228,7 @@ SetupCollector <path-to-setups>/tspaco.xml
 
 ## Continuous integration
 
-[`.github/workflows/release-all.yml`](.github/workflows/release-all.yml) builds installers for all four targets — Windows, macOS ARM, macOS Intel, Linux — on every `v*` tag, and publishes them to a GitHub Release.
+[`.github/workflows/release-all.yml`](https://github.com/arminn2206/ProjNO_TSPACO_Memisevic/blob/main/.github/workflows/release-all.yml) (on the `main` branch) builds installers for all four targets — Windows, macOS ARM, macOS Intel, Linux — on every `v*` tag, and publishes them to a GitHub Release.
 
 Each job installs the natID SDK from scratch, downloads the matching prebuilt binaries, builds in Release, runs `SetupCollector`, and uploads the result. Two environment quirks are handled: the SDK expects a RAM disk at a platform-specific mount point (`R:` / `/Volumes/RAMDisk` / `/media/RAMDisk`), faked with `subst` or a symlink, and the packaging config expects the sources at a fixed path, provided by symlinking the checkout.
 
@@ -249,6 +249,6 @@ The original `Graph` class from the example was dropped: ACO needs a complete gr
 
 ## License
 
-MIT — see [LICENSE.txt](LICENSE.txt).
+MIT — see [LICENSE.txt](https://github.com/arminn2206/ProjNO_TSPACO_Memisevic/blob/main/LICENSE.txt).
 
 Built on the natID/natGUI framework and adapted from the `B_S03_Maps` example, both by [prof. Izudin Džafić](https://github.com/idzafic), used with permission.
