@@ -216,7 +216,7 @@ An empty build folder next to the sources does not mean the build failed.
 
 ### Packaging
 
-Installers are produced by the SDK's `SetupCollector` tool against [`Implementation/packaging/tspaco.xml`](Implementation/packaging/tspaco.xml):
+Installers are produced by the SDK's `SetupCollector` tool against [`Implementation/packaging/tspaco.xml`](packaging/tspaco.xml):
 
 ```bash
 SetupCollector <path-to-setups>/tspaco.xml
