@@ -52,8 +52,8 @@ Each run draws 15–25 cities at random from a set of 99 real Bosnian cities wit
 - **Statistics sidebar** — iteration, best cost, runtime, greedy baseline, and the signed improvement percentage over that baseline
 - **Run comparison** — the two most recently completed runs side by side with their differences, so parameter changes can actually be evaluated
 - **CSV export** — two files per run: a convergence table for offline analysis, and a full problem instance (coordinates, tour, distance matrix) for verification or replay
-- **Reproducible runs** — a fixed seed replays a run exactly; seed and city-draw index are both written into every export. All ACO parameters, the seed, and the animation speed persist across restarts (clamped the same way whether they arrive from the UI or from a previous session)
-- **Bilingual UI** — English and Bosnian, switchable at runtime (95 translated strings; the in-app help below is English-only)
+- **Reproducible runs** — a fixed seed replays a run exactly; seed and city-draw index are both written into every export. All editable ACO parameters, the seed, and the animation speed persist across restarts (clamped the same way whether they arrive from the UI or from a previous session)
+- **Bilingual UI** — English and Bosnian, chosen in Settings; the change takes effect after a restart, which the app offers to perform (95 translated strings; the in-app help below is English-only)
 - **Light and dark themes** — colours adapt to the OS setting on startup
 - **In-app help** — App menu → Help opens a static explanation of the algorithm, every part of the map/chart/sidebar, and every control, for anyone opening the app without this README
 
@@ -131,7 +131,7 @@ Implementation/src/
 ├── DialogCompare.h      Modal host for the comparison view
 ├── ViewHelp.h           Static in-app explanation of the app (App menu → Help)
 ├── DialogHelp.h         Modal host for the help view
-├── ViewSettings.h       Parameter editor
+├── ViewSettings.h       Settings dialog: language, toolbar, town names, sound, trail
 ├── DialogSettings.h     Modal host for settings, persists to OS properties
 ├── RunExport.h          All file I/O — CSV export
 ├── Town.h               City primitive: coordinates, name, draw state
